@@ -1,1 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Auth App</title>
+</head>
+<body>
 
+<h2>Signup</h2>
+<input id="su_user" placeholder="username">
+<input id="su_pass" type="password" placeholder="password">
+<button onclick="signup()">Signup</button>
+
+<h2>Login</h2>
+<input id="li_user" placeholder="username">
+<input id="li_pass" type="password" placeholder="password">
+<button onclick="login()">Login</button>
+
+<h2>Users</h2>
+<button onclick="getUsers()">Load Users</button>
+<ul id="users"></ul>
+
+<script src="app.js"></script>
+
+</body>
+</html>
