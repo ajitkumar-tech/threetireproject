@@ -12,7 +12,7 @@ const SECRET = "mysecret";
 
 // ✅ DB connection
 const db = mysql.createConnection({
-  host: 'db',   // use 'localhost' if not using Docker
+  host: 'db',   
   user: 'root',
   password: 'root',
   database: 'testdb'
