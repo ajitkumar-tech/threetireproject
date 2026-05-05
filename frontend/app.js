@@ -1,8 +1,8 @@
-
 let token = "";
 
+// 🔹 Signup
 async function signup() {
-  await fetch('http://localhost:3000/signup', {
+  const res = await fetch('http://localhost:3000/signup', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
     body: JSON.stringify({
@@ -10,9 +10,14 @@ async function signup() {
       password: su_pass.value
     })
   });
+
+  const data = await res.json();
+  console.log("Signup:", data);
+
   alert("User created");
 }
 
+// 🔹 Login (FIXED)
 async function login() {
   const res = await fetch('http://localhost:3000/login', {
     method: 'POST',
@@ -24,18 +29,41 @@ async function login() {
   });
 
   const data = await res.json();
+  console.log("Login response:", data);
+
+  // ✅ CHECK SUCCESS
+  if (!data.token) {
+    alert(data.error || "Login failed");
+    return;
+  }
+
   token = data.token;
-  alert("Logged in");
+  console.log("TOKEN:", token);
+
+  alert("Logged in successfully");
 }
 
+// 🔹 Get Users (FIXED)
 async function getUsers() {
+  if (!token) {
+    alert("Please login first");
+    return;
+  }
+
   const res = await fetch('http://localhost:3000/users', {
     headers: {
-      'Authorization': token
+      // 🔥 IMPORTANT FIX
+      'Authorization': `Bearer ${token}`
     }
   });
 
+  if (res.status === 403) {
+    alert("Forbidden (invalid token)");
+    return;
+  }
+
   const data = await res.json();
+
   users.innerHTML = '';
 
   data.forEach(u => {
