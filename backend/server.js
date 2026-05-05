@@ -10,20 +10,34 @@ app.use(cors());
 
 const SECRET = "mysecret";
 
+// ✅ DB connection
 const db = mysql.createConnection({
-  host: 'db',
+  host: 'db',   // use 'localhost' if not using Docker
   user: 'root',
   password: 'root',
   database: 'testdb'
 });
 
-// 🔐 Middleware
+// 🔐 Middleware (FIXED)
 function authenticate(req, res, next) {
-  const token = req.headers['authorization'];
-  if (!token) return res.sendStatus(403);
+  const authHeader = req.headers['authorization'];
+
+  if (!authHeader) {
+    return res.status(403).json({ error: "No token provided" });
+  }
+
+  // Expect: Bearer <token>
+  const token = authHeader.split(' ')[1];
+
+  if (!token) {
+    return res.status(403).json({ error: "Token missing" });
+  }
 
   jwt.verify(token, SECRET, (err, user) => {
-    if (err) return res.sendStatus(403);
+    if (err) {
+      return res.status(403).json({ error: "Invalid token" });
+    }
+
     req.user = user;
     next();
   });
@@ -32,19 +46,27 @@ function authenticate(req, res, next) {
 // 🔹 Signup
 app.post('/signup', async (req, res) => {
   const { username, password } = req.body;
-  const hash = await bcrypt.hash(password, 10);
 
-  db.query(
-    'INSERT INTO users (username, password) VALUES (?, ?)',
-    [username, hash],
-    (err) => {
-      if (err) return res.send(err);
-      res.send("User registered");
-    }
-  );
+  try {
+    const hash = await bcrypt.hash(password, 10);
+
+    db.query(
+      'INSERT INTO users (username, password) VALUES (?, ?)',
+      [username, hash],
+      (err) => {
+        if (err) {
+          console.log(err);
+          return res.status(500).json(err);
+        }
+        res.json({ message: "User registered" });
+      }
+    );
+  } catch (err) {
+    res.status(500).json(err);
+  }
 });
 
-// 🔹 Login
+// 🔹 Login (FIXED)
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
 
@@ -52,12 +74,23 @@ app.post('/login', (req, res) => {
     'SELECT * FROM users WHERE username=?',
     [username],
     async (err, result) => {
-      if (result.length === 0) return res.send("User not found");
+
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      if (result.length === 0) {
+        return res.status(404).json({ error: "User not found" });
+      }
 
       const valid = await bcrypt.compare(password, result[0].password);
-      if (!valid) return res.send("Invalid password");
 
-      const token = jwt.sign({ username }, SECRET);
+      if (!valid) {
+        return res.status(401).json({ error: "Invalid password" });
+      }
+
+      const token = jwt.sign({ username }, SECRET, { expiresIn: '1h' });
+
       res.json({ token });
     }
   );
@@ -66,8 +99,9 @@ app.post('/login', (req, res) => {
 // 🔹 Protected Route
 app.get('/users', authenticate, (req, res) => {
   db.query('SELECT id, username FROM users', (err, result) => {
+    if (err) return res.status(500).json(err);
     res.json(result);
   });
 });
 
-app.listen(3000, () => console.log('Server running'));
+app.listen(3000, () => console.log('Server running on port 3000'));
