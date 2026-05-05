@@ -18,7 +18,7 @@ const db = mysql.createConnection({
   database: 'testdb'
 });
 
-// 🔐 Middleware (FIXED)
+// 🔐 FIXED Middleware
 function authenticate(req, res, next) {
   const authHeader = req.headers['authorization'];
 
@@ -26,11 +26,11 @@ function authenticate(req, res, next) {
     return res.status(403).json({ error: "No token provided" });
   }
 
-  // Expect: Bearer <token>
+  // 🔥 Extract token from "Bearer <token>"
   const token = authHeader.split(' ')[1];
 
   if (!token) {
-    return res.status(403).json({ error: "Token missing" });
+    return res.status(403).json({ error: "Invalid token format" });
   }
 
   jwt.verify(token, SECRET, (err, user) => {
@@ -45,19 +45,16 @@ function authenticate(req, res, next) {
 
 // 🔹 Signup
 app.post('/signup', async (req, res) => {
-  const { username, password } = req.body;
-
   try {
+    const { username, password } = req.body;
+
     const hash = await bcrypt.hash(password, 10);
 
     db.query(
       'INSERT INTO users (username, password) VALUES (?, ?)',
       [username, hash],
       (err) => {
-        if (err) {
-          console.log(err);
-          return res.status(500).json(err);
-        }
+        if (err) return res.status(500).json(err);
         res.json({ message: "User registered" });
       }
     );
@@ -66,7 +63,7 @@ app.post('/signup', async (req, res) => {
   }
 });
 
-// 🔹 Login (FIXED)
+// 🔹 Login
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
 
@@ -75,9 +72,7 @@ app.post('/login', (req, res) => {
     [username],
     async (err, result) => {
 
-      if (err) {
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
 
       if (result.length === 0) {
         return res.status(404).json({ error: "User not found" });
