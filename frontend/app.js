@@ -1,6 +1,6 @@
 let token = "";
 
-// 🔹 Signup
+//  Signup
 async function signup() {
   try {
     const res = await fetch('http://localhost:3000/signup', {
@@ -49,7 +49,7 @@ async function login() {
 
     token = data.token;
 
-    // ✅ optional (better UX)
+    //  optional (better UX)
     localStorage.setItem("token", token);
 
     alert("Logged in successfully");
@@ -62,7 +62,7 @@ async function login() {
 // 🔹 Get Users (Protected)
 async function getUsers() {
   try {
-    // ✅ get token from memory or storage
+    //  get token from memory or storage
     const savedToken = token || localStorage.getItem("token");
 
     if (!savedToken) {
@@ -72,7 +72,7 @@ async function getUsers() {
 
     const res = await fetch('http://localhost:3000/users', {
       headers: {
-        Authorization: `Bearer ${savedToken}`   // ✅ REQUIRED
+        Authorization: `Bearer ${savedToken}`   
       }
     });
 
